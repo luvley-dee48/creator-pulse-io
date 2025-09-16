@@ -1,18 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Wallet,
   TrendingUp,
@@ -29,6 +22,27 @@ import Navigation from "@/components/Navigation";
 
 const UserDashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState("portfolio");
+
+  // Update selected tab based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/trades')) setSelectedTab('trades');
+    else if (path.includes('/watchlist')) setSelectedTab('watchlist');
+    else setSelectedTab('portfolio');
+  }, [location.pathname]);
+
+  // Handle tab change and update URL
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
+    if (value === 'portfolio') {
+      navigate('/dashboard');
+    } else {
+      navigate(`/dashboard/${value}`);
+    }
+  };
   
   // Mock data
   const [portfolio] = useState([
@@ -158,211 +172,237 @@ const UserDashboard = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search tokens..." className="pl-10 w-64" />
             </div>
-            <Button asChild className="pulse-gradient hover:opacity-90 pulse-transition">
-              <Link to="/explore">
-                <Search className="w-4 h-4 mr-2" />
-                Explore Tokens
-              </Link>
+            <Button className="pulse-gradient hover:opacity-90 pulse-transition">
+              <Search className="w-4 h-4 mr-2" />
+              Explore Tokens
             </Button>
           </div>
         </div>
 
-        {/* Portfolio Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
-              <Wallet className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${totalValue.toFixed(2)}
-              </div>
-              <p className={`text-xs flex items-center ${
-                totalGainLossPercent >= 0 ? 'text-success' : 'text-destructive'
-              }`}>
-                {totalGainLossPercent >= 0 ? (
-                  <ArrowUpRight className="w-3 h-3 mr-1" />
-                ) : (
-                  <ArrowDownRight className="w-3 h-3 mr-1" />
-                )}
-                {totalGainLossPercent >= 0 ? '+' : ''}{totalGainLossPercent.toFixed(2)}% (${totalGainLoss.toFixed(2)})
-              </p>
-            </CardContent>
-          </Card>
+        <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="trades">Trade History</TabsTrigger>
+            <TabsTrigger value="watchlist">Watchlist</TabsTrigger>
+          </TabsList>
 
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tokens Owned</CardTitle>
-              <Star className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{portfolio.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Across {portfolio.length} different creators
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Best Performer</CardTitle>
-              <TrendingUp className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">CC</div>
-              <p className="text-xs text-muted-foreground">
-                +12.5% in 24h
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Your Holdings */}
-          <div className="xl:col-span-2">
-            <Card className="pulse-card-gradient pulse-shadow border-border">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Your Holdings</CardTitle>
-                    <CardDescription>Your creator token portfolio</CardDescription>
+          <TabsContent value="portfolio" className="space-y-6">
+            {/* Portfolio Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
+                  <Wallet className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${totalValue.toFixed(2)}
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/portfolio">
-                      View All
-                      <ArrowUpRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {portfolio.map((token) => (
-                    <div key={token.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage src={token.creatorAvatar} />
-                          <AvatarFallback>{token.symbol}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">{token.name}</h3>
-                          <p className="text-sm text-muted-foreground">by {token.creator}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="font-semibold">{token.holdings}</div>
-                        <p className="text-sm text-muted-foreground">{token.symbol}</p>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-semibold">${token.price}</span>
-                          <Badge 
-                            variant={token.change24h > 0 ? "default" : "destructive"}
-                            className={token.change24h > 0 ? "bg-success text-success-foreground" : ""}
-                          >
-                            {token.change24h > 0 ? '+' : ''}{token.change24h}%
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          ${token.value.toFixed(2)}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm" className="text-success hover:text-success">
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          <Minus className="w-4 h-4" />
-                        </Button>
+                  <p className={`text-xs flex items-center ${
+                    totalGainLossPercent >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {totalGainLossPercent >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 mr-1" />
+                    )}
+                    {totalGainLossPercent >= 0 ? '+' : ''}{totalGainLossPercent.toFixed(2)}% (${totalGainLoss.toFixed(2)})
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Tokens Owned</CardTitle>
+                  <Star className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{portfolio.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Across {portfolio.length} different creators
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Best Performer</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">CC</div>
+                  <p className="text-xs text-muted-foreground">
+                    +12.5% in 24h
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Your Holdings */}
+              <div className="xl:col-span-2">
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Your Holdings</CardTitle>
+                        <CardDescription>Your creator token portfolio</CardDescription>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {portfolio.map((token) => (
+                        <div key={token.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            <Avatar>
+                              <AvatarImage src={token.creatorAvatar} />
+                              <AvatarFallback>{token.symbol}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold">{token.name}</h3>
+                              <p className="text-sm text-muted-foreground">by {token.creator}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="text-center">
+                            <div className="font-semibold">{token.holdings}</div>
+                            <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="font-semibold">${token.price}</span>
+                              <Badge 
+                                variant={token.change24h > 0 ? "default" : "destructive"}
+                                className={token.change24h > 0 ? "bg-success text-success-foreground" : ""}
+                              >
+                                {token.change24h > 0 ? '+' : ''}{token.change24h}%
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              ${token.value.toFixed(2)}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" className="text-success hover:text-success">
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Trending Tokens */}
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Trending Tokens */}
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <CardTitle>Trending Tokens</CardTitle>
+                    <CardDescription>Most popular creator tokens today</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {trendingTokens.map((token) => (
+                        <div key={token.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage src={token.creatorAvatar} />
+                              <AvatarFallback>{token.symbol}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{token.symbol}</p>
+                              <p className="text-xs text-muted-foreground">{token.creator}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${token.price}</p>
+                            <Badge 
+                              variant="default"
+                              className="bg-success text-success-foreground text-xs"
+                            >
+                              +{token.change24h}%
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Trades */}
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <CardTitle>Recent Trades</CardTitle>
+                    <CardDescription>Your latest transactions</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {recentTrades.map((trade) => (
+                        <div key={trade.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              trade.type === 'buy' ? 'bg-success/20' : 'bg-destructive/20'
+                            }`}>
+                              {trade.type === 'buy' ? (
+                                <Plus className="w-4 h-4 text-success" />
+                              ) : (
+                                <Minus className="w-4 h-4 text-destructive" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium capitalize">
+                                {trade.type} {trade.token}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {trade.amount} @ ${trade.price}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${trade.value}</p>
+                            <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="trades" className="space-y-6">
             <Card className="pulse-card-gradient pulse-shadow border-border">
               <CardHeader>
-                <CardTitle>Trending Tokens</CardTitle>
-                <CardDescription>Most popular creator tokens today</CardDescription>
+                <CardTitle>Trade History</CardTitle>
+                <CardDescription>Your complete trading history and performance</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {trendingTokens.map((token) => (
-                    <div key={token.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={token.creatorAvatar} />
-                          <AvatarFallback>{token.symbol}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{token.symbol}</p>
-                          <p className="text-xs text-muted-foreground">{token.creator}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${token.price}</p>
-                        <Badge 
-                          variant="default"
-                          className="bg-success text-success-foreground text-xs"
-                        >
-                          +{token.change24h}%
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-muted-foreground">Trade history interface coming soon...</p>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Recent Trades */}
+          <TabsContent value="watchlist" className="space-y-6">
             <Card className="pulse-card-gradient pulse-shadow border-border">
               <CardHeader>
-                <CardTitle>Recent Trades</CardTitle>
-                <CardDescription>Your latest transactions</CardDescription>
+                <CardTitle>Your Watchlist</CardTitle>
+                <CardDescription>Tokens you're following and considering for investment</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentTrades.map((trade) => (
-                    <div key={trade.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          trade.type === 'buy' ? 'bg-success/20' : 'bg-destructive/20'
-                        }`}>
-                          {trade.type === 'buy' ? (
-                            <Plus className="w-4 h-4 text-success" />
-                          ) : (
-                            <Minus className="w-4 h-4 text-destructive" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium capitalize">
-                            {trade.type} {trade.token}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {trade.amount} @ ${trade.price}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${trade.value}</p>
-                        <p className="text-xs text-muted-foreground">{trade.timestamp}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-muted-foreground">Watchlist feature coming soon...</p>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

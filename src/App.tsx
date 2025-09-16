@@ -25,13 +25,33 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            
+            {/* Creator Dashboard Routes */}
             <Route path="/creator" element={<CreatorDashboard />} />
+            <Route path="/creator/overview" element={<CreatorDashboard />} />
+            <Route path="/creator/tokens" element={<CreatorDashboard />} />
+            <Route path="/creator/analytics" element={<CreatorDashboard />} />
+            <Route path="/creator/revenue" element={<CreatorDashboard />} />
+            <Route path="/creator/community" element={<CreatorDashboard />} />
+            
+            {/* User Dashboard Routes */}
             <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/dashboard/portfolio" element={<UserDashboard />} />
+            <Route path="/dashboard/trades" element={<UserDashboard />} />
+            <Route path="/dashboard/watchlist" element={<UserDashboard />} />
+            <Route path="/portfolio" element={<UserDashboard />} />
+            
+            {/* Admin Dashboard Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/overview" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminDashboard />} />
+            <Route path="/admin/tokens" element={<AdminDashboard />} />
+            <Route path="/admin/revenue" element={<AdminDashboard />} />
+            <Route path="/admin/system" element={<AdminDashboard />} />
+            
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/portfolio" element={<UserDashboard />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

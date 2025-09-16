@@ -1,18 +1,10 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Coins,
   TrendingUp,
@@ -21,15 +13,36 @@ import {
   PlusCircle,
   Eye,
   Edit,
-  MoreHorizontal,
   ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 
 const CreatorDashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState("overview");
+
+  // Update selected tab based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/tokens')) setSelectedTab('tokens');
+    else if (path.includes('/analytics')) setSelectedTab('analytics');
+    else if (path.includes('/revenue')) setSelectedTab('revenue');
+    else if (path.includes('/community')) setSelectedTab('community');
+    else setSelectedTab('overview');
+  }, [location.pathname]);
+
+  // Handle tab change and update URL
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
+    if (value === 'overview') {
+      navigate('/creator');
+    } else {
+      navigate(`/creator/${value}`);
+    }
+  };
   
   // Mock data - in real app, this would come from ICP canisters
   const [tokens] = useState([
@@ -107,208 +120,231 @@ const CreatorDashboard = () => {
             </p>
           </div>
           <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-            <Button asChild className="pulse-gradient hover:opacity-90 pulse-transition">
-              <Link to="/creator/create-token">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Create New Token
-              </Link>
+            <Button className="pulse-gradient hover:opacity-90 pulse-transition">
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Create New Token
             </Button>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">
-                ${totalValue.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <ArrowUpRight className="w-3 h-3 inline mr-1" />
-                +8.2% from last month
-              </p>
-            </CardContent>
-          </Card>
+        <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="tokens">My Tokens</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="community">Community</TabsTrigger>
+          </TabsList>
 
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Tokens</CardTitle>
-              <Coins className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{tokens.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Across {tokens.length > 1 ? 'multiple' : '1'} token{tokens.length > 1 ? 's' : ''}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Holders</CardTitle>
-              <Users className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalHolders.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <ArrowUpRight className="w-3 h-3 inline mr-1" />
-                +12% this week
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">24h Volume</CardTitle>
-              <TrendingUp className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${total24hVolume.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <ArrowUpRight className="w-3 h-3 inline mr-1" />
-                +5.4% from yesterday
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Your Tokens */}
-          <div className="xl:col-span-2">
-            <Card className="pulse-card-gradient pulse-shadow border-border">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Your Tokens</CardTitle>
-                    <CardDescription>Manage and monitor your created tokens</CardDescription>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
+                  <DollarSign className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">
+                    ${totalValue.toLocaleString()}
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/creator/tokens">
-                      View All
-                      <ArrowUpRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tokens.map((token) => (
-                    <div key={token.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${token.symbol}`} />
-                          <AvatarFallback>{token.symbol}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">{token.name}</h3>
-                          <p className="text-sm text-muted-foreground">{token.symbol}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-semibold">${token.price}</span>
-                          <Badge 
-                            variant={token.change24h > 0 ? "default" : "destructive"}
-                            className={token.change24h > 0 ? "bg-success text-success-foreground" : ""}
-                          >
-                            {token.change24h > 0 ? '+' : ''}{token.change24h}%
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {token.holders} holders
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/creator/tokens/${token.id}`}>
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                  <p className="text-xs text-muted-foreground">
+                    <ArrowUpRight className="w-3 h-3 inline mr-1" />
+                    +8.2% from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Tokens</CardTitle>
+                  <Coins className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{tokens.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Across {tokens.length > 1 ? 'multiple' : '1'} token{tokens.length > 1 ? 's' : ''}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Holders</CardTitle>
+                  <Users className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalHolders.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    <ArrowUpRight className="w-3 h-3 inline mr-1" />
+                    +12% this week
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">24h Volume</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${total24hVolume.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <ArrowUpRight className="w-3 h-3 inline mr-1" />
+                    +5.4% from yesterday
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Your Tokens */}
+              <div className="xl:col-span-2">
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Your Tokens</CardTitle>
+                        <CardDescription>Manage and monitor your created tokens</CardDescription>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {tokens.map((token) => (
+                        <div key={token.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            <Avatar>
+                              <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${token.symbol}`} />
+                              <AvatarFallback>{token.symbol}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-semibold">{token.name}</h3>
+                              <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="font-semibold">${token.price}</span>
+                              <Badge 
+                                variant={token.change24h > 0 ? "default" : "destructive"}
+                                className={token.change24h > 0 ? "bg-success text-success-foreground" : ""}
+                              >
+                                {token.change24h > 0 ? '+' : ''}{token.change24h}%
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {token.holders} holders
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Recent Activity */}
-          <div>
+              {/* Recent Activity */}
+              <div>
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Latest transactions and mints</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {recentTransactions.map((tx) => (
+                        <div key={tx.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              tx.type === 'mint' ? 'bg-success/20' : 'bg-primary/20'
+                            }`}>
+                              {tx.type === 'mint' ? (
+                                <PlusCircle className="w-4 h-4 text-success" />
+                              ) : (
+                                <TrendingUp className="w-4 h-4 text-primary" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium capitalize">{tx.type}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {tx.amount} {tx.token}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${tx.value}</p>
+                            <p className="text-xs text-muted-foreground">{tx.timestamp}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tokens" className="space-y-6">
             <Card className="pulse-card-gradient pulse-shadow border-border">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest transactions and mints</CardDescription>
+                <CardTitle>Manage Your Tokens</CardTitle>
+                <CardDescription>Create, edit, and monitor your creator tokens</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentTransactions.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          tx.type === 'mint' ? 'bg-success/20' : 'bg-primary/20'
-                        }`}>
-                          {tx.type === 'mint' ? (
-                            <PlusCircle className="w-4 h-4 text-success" />
-                          ) : (
-                            <TrendingUp className="w-4 h-4 text-primary" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium capitalize">{tx.type}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {tx.amount} {tx.token}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${tx.value}</p>
-                        <p className="text-xs text-muted-foreground">{tx.timestamp}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-muted-foreground">Token management interface coming soon...</p>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Quick Actions */}
-            <Card className="pulse-card-gradient pulse-shadow border-border mt-6">
+          <TabsContent value="analytics" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>Performance Analytics</CardTitle>
+                <CardDescription>Detailed analytics for your tokens and community</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/creator/analytics">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    View Analytics
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/creator/holders">
-                    <Users className="w-4 h-4 mr-2" />
-                    Manage Holders
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/settings">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Link>
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="revenue" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
+              <CardHeader>
+                <CardTitle>Revenue Tracking</CardTitle>
+                <CardDescription>Monitor your earnings and payouts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Revenue tracking coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="community" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
+              <CardHeader>
+                <CardTitle>Community Management</CardTitle>
+                <CardDescription>Engage with your token holders and fans</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Community tools coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

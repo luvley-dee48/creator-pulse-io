@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
@@ -38,6 +39,29 @@ import Navigation from "@/components/Navigation";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState("overview");
+
+  // Update selected tab based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/users')) setSelectedTab('users');
+    else if (path.includes('/tokens')) setSelectedTab('tokens');
+    else if (path.includes('/revenue')) setSelectedTab('revenue');
+    else if (path.includes('/system')) setSelectedTab('system');
+    else setSelectedTab('overview');
+  }, [location.pathname]);
+
+  // Handle tab change and update URL
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
+    if (value === 'overview') {
+      navigate('/admin');
+    } else {
+      navigate(`/admin/${value}`);
+    }
+  };
   
   // Mock data - in real app, this would come from ICP canisters
   const [platformStats] = useState({
@@ -152,257 +176,276 @@ const AdminDashboard = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Data
             </Button>
-            <Button asChild className="pulse-gradient hover:opacity-90 pulse-transition">
-              <Link to="/admin/settings">
-                <Settings className="w-4 h-4 mr-2" />
-                Platform Settings
-              </Link>
+            <Button className="pulse-gradient hover:opacity-90 pulse-transition">
+              <Settings className="w-4 h-4 mr-2" />
+              Platform Settings
             </Button>
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{platformStats.totalUsers.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <ArrowUpRight className="w-3 h-3 inline mr-1" />
-                +12% from last month
-              </p>
-            </CardContent>
-          </Card>
+        <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="tokens">Tokens</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="system">System</TabsTrigger>
+          </TabsList>
 
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
-              <Coins className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{platformStats.totalTokens}</div>
-              <p className="text-xs text-muted-foreground">
-                {platformStats.activeTokens} active
-              </p>
-            </CardContent>
-          </Card>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{platformStats.totalUsers.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    <ArrowUpRight className="w-3 h-3 inline mr-1" />
+                    +12% from last month
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
-              <TrendingUp className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${platformStats.totalVolume.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <ArrowUpRight className="w-3 h-3 inline mr-1" />
-                +8.4% from yesterday
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
+                  <Coins className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{platformStats.totalTokens}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {platformStats.activeTokens} active
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="pulse-card-gradient pulse-shadow border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Platform Fees</CardTitle>
-              <DollarSign className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${platformStats.totalFees.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total collected
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Alert Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="pulse-card-gradient pulse-shadow border-warning">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">{platformStats.pendingReviews}</div>
-              <p className="text-xs text-muted-foreground">
-                Tokens awaiting approval
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="pulse-card-gradient pulse-shadow border-destructive">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Flagged Content</CardTitle>
-              <XCircle className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{platformStats.flaggedContent}</div>
-              <p className="text-xs text-muted-foreground">
-                Requires immediate attention
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="pulse-card-gradient pulse-shadow border-success">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Status</CardTitle>
-              <CheckCircle className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">Healthy</div>
-              <p className="text-xs text-muted-foreground">
-                All systems operational
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Recent Tokens */}
-          <div className="xl:col-span-2">
-            <Card className="pulse-card-gradient pulse-shadow border-border">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Recent Tokens</CardTitle>
-                    <CardDescription>Latest token submissions and activity</CardDescription>
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${platformStats.totalVolume.toLocaleString()}
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/admin/tokens">
-                      View All
-                      <ArrowUpRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Token</TableHead>
-                      <TableHead>Creator</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Volume</TableHead>
-                      <TableHead>Fees</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTokens.map((token) => (
-                      <TableRow key={token.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${token.symbol}`} />
-                              <AvatarFallback>{token.symbol}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{token.name}</p>
-                              <p className="text-sm text-muted-foreground">{token.symbol}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{token.creator}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(token.status)}>
-                            {token.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>${token.volume24h.toLocaleString()}</TableCell>
-                        <TableCell>${token.fees}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {token.status === 'flagged' && (
-                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                <Ban className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+                  <p className="text-xs text-muted-foreground">
+                    <ArrowUpRight className="w-3 h-3 inline mr-1" />
+                    +8.4% from yesterday
+                  </p>
+                </CardContent>
+              </Card>
 
-          {/* Top Users */}
-          <div>
-            <Card className="pulse-card-gradient pulse-shadow border-border">
-              <CardHeader>
-                <CardTitle>Top Users</CardTitle>
-                <CardDescription>Highest value participants</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {topUsers.map((user, index) => (
-                    <div key={user.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-sm font-bold">#{index + 1}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground capitalize">{user.type}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${user.totalValue.toLocaleString()}</p>
-                        <Badge className={getStatusColor(user.status)}>
-                          {user.status}
-                        </Badge>
+              <Card className="pulse-card-gradient pulse-shadow border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Platform Fees</CardTitle>
+                  <DollarSign className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${platformStats.totalFees.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Total collected
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Alert Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="pulse-card-gradient pulse-shadow border-warning">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-warning">{platformStats.pendingReviews}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Tokens awaiting approval
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-destructive">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Flagged Content</CardTitle>
+                  <XCircle className="h-4 w-4 text-destructive" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">{platformStats.flaggedContent}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Requires immediate attention
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="pulse-card-gradient pulse-shadow border-success">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">Healthy</div>
+                  <p className="text-xs text-muted-foreground">
+                    All systems operational
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Recent Tokens */}
+              <div className="xl:col-span-2">
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Recent Tokens</CardTitle>
+                        <CardDescription>Latest token submissions and activity</CardDescription>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Token</TableHead>
+                          <TableHead>Creator</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Volume</TableHead>
+                          <TableHead>Fees</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentTokens.map((token) => (
+                          <TableRow key={token.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${token.symbol}`} />
+                                  <AvatarFallback>{token.symbol}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">{token.name}</p>
+                                  <p className="text-sm text-muted-foreground">{token.symbol}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{token.creator}</TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(token.status)}>
+                                {token.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>${token.volume24h.toLocaleString()}</TableCell>
+                            <TableCell>${token.fees}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                {token.status === 'flagged' && (
+                                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                    <Ban className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* Quick Actions */}
-            <Card className="pulse-card-gradient pulse-shadow border-border mt-6">
+              {/* Top Users */}
+              <div>
+                <Card className="pulse-card-gradient pulse-shadow border-border">
+                  <CardHeader>
+                    <CardTitle>Top Users</CardTitle>
+                    <CardDescription>Highest value participants</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {topUsers.map((user, index) => (
+                        <div key={user.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-sm font-bold">#{index + 1}</span>
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-muted-foreground capitalize">{user.type}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${user.totalValue.toLocaleString()}</p>
+                            <Badge className={getStatusColor(user.status)}>
+                              {user.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage platform users and their permissions</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/admin/users">
-                    <Users className="w-4 h-4 mr-2" />
-                    Manage Users
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/admin/tokens">
-                    <Coins className="w-4 h-4 mr-2" />
-                    Review Tokens
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/admin/analytics">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    View Analytics
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/admin/settings">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Platform Settings
-                  </Link>
-                </Button>
+              <CardContent>
+                <p className="text-muted-foreground">User management interface coming soon...</p>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="tokens" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
+              <CardHeader>
+                <CardTitle>Token Management</CardTitle>
+                <CardDescription>Review and manage creator tokens</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Token management interface coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="revenue" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
+              <CardHeader>
+                <CardTitle>Revenue Analytics</CardTitle>
+                <CardDescription>Platform revenue and fee analytics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Revenue analytics coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="system" className="space-y-6">
+            <Card className="pulse-card-gradient pulse-shadow border-border">
+              <CardHeader>
+                <CardTitle>System Settings</CardTitle>
+                <CardDescription>Platform configuration and system health</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">System settings coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
