@@ -17,12 +17,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
+import TokenCreationForm from "@/components/TokenCreationForm";
 
 const CreatorDashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [isTokenFormOpen, setIsTokenFormOpen] = useState(false);
 
   // Update selected tab based on current route
   useEffect(() => {
@@ -120,7 +122,10 @@ const CreatorDashboard = () => {
             </p>
           </div>
           <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-            <Button className="pulse-gradient hover:opacity-90 pulse-transition">
+            <Button 
+              className="pulse-gradient hover:opacity-90 pulse-transition"
+              onClick={() => setIsTokenFormOpen(true)}
+            >
               <PlusCircle className="w-4 h-4 mr-2" />
               Create New Token
             </Button>
@@ -346,6 +351,12 @@ const CreatorDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Token Creation Form Modal */}
+      <TokenCreationForm 
+        open={isTokenFormOpen}
+        onOpenChange={setIsTokenFormOpen}
+      />
     </div>
   );
 };

@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Plus,
+  Bitcoin,
   Minus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -172,9 +173,9 @@ const UserDashboard = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search tokens..." className="pl-10 w-64" />
             </div>
-            <Button className="pulse-gradient hover:opacity-90 pulse-transition">
-              <Search className="w-4 h-4 mr-2" />
-              Explore Tokens
+            <Button className=" hover:opacity-90 pulse-transition bg-purple-600 ">
+              <Bitcoin className="w-4 h-4 mr-2" />
+              Create Tokens
             </Button>
           </div>
         </div>
